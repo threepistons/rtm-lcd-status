@@ -2,9 +2,9 @@ _Issue template: Please fill in the gaps.  Please note: I cannot help with filte
 
 **Given** [Your operating system and version] with Python [Your Python version] and all dependancies installed.
 
-**When I** [describe what actions you took, e.g. "When I ran ```./rtmstatus.py debug``` and pressed CTRL-C to exit"]
+**When I** [describe what actions you took, e.g. "When I ran ```./rtmstatus.py``` and pressed CTRL-C to exit"]
 
-**In order to** [What did you intend to do? e.g. "In order to run the task count script to test my filters"]
+**In order to** [What did you intend to do? e.g. "In order to run the task count script to test my backlight colours"]
 
 **Then** I get [What you saw, e.g. "I got the following output:
 ```
