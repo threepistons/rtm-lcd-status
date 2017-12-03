@@ -8,6 +8,10 @@ import time
 from lcdbackpack import LcdBackpack
 
 class Taskcounter:
+    # This class gets an integer number of tasks out of RTM, according to the supplied filter.
+    # e.g.
+    #    moo = Taskcounter('status:incomplete')
+    #    print str(moo.count) # gives number of open tasks
 
     def __init__(self, myfilter):
         self.myfilter = myfilter
@@ -19,12 +23,25 @@ class Taskcounter:
         self.count = count
 
 if __name__ == '__main__':
-    # call the program as `listtasks.py api_key shared_secret [optional: token]`
+    # put the api token and secret in the credentials file (chmod 600)
     # get those parameters from http://www.rememberthemilk.com/services/api/keys.rtm
+
+    debug = True if (len(sys.argv) > 1 and sys.argv[1] == 'debug') else False
+
+    off = True if (len(sys.argv) > 1 and sys.argv[1] == 'off') else False
+
+    if off == True:
+        a = LcdBackpack('/dev/ttyACM0', 115200)
+        a.connect()
+        a.display_off()
+        a.clear()
+        a.disconnect()
+        quit()
+
     creds = Rtmcreds()
     api = Rtm(creds.api_key, creds.shared_secret, "read", creds.token)
-    
-    # authenication block, see http://www.rememberthemilk.com/services/api/authentication.rtm
+
+    # authentication block, see http://www.rememberthemilk.com/services/api/authentication.rtm
     # check for valid token
     if not api.token_valid():
         # use desktop-type authentication
@@ -35,35 +52,54 @@ if __name__ == '__main__':
         # get the token for the frob
         api.retrieve_token(frob)
         # print out new token, should be used to initialize the Rtm object next time
-        # (a real application should store the token somewhere)
+        # Put the new token in the credentials file by hand for now.
         print "New token: %s" % api.token
-    
-    # get all open tasks, see http://www.rememberthemilk.com/services/api/methods/rtm.tasks.getList.rtm
-    
+
     # Variable naming:
     # * o = overdue
     # * u  = urgent (needs to be done soon, not the same as important)
     # * i  = important
     # * f  = filter
-    
+
     incompletef = 'status:incomplete'
     importantf = 'priority:1'
-    
+
     of = incompletef + ' and dueBefore:now'
     oif = of + ' and ' + importantf
-    uf = incompletef + ' and dueWithin:"2 days of today"'
+    uf = incompletef + ' and dueWithin:"2 days of now"'
     uif = uf + ' and ' + importantf
     
-    o = Taskcounter(of)
-    print of + ': ' + str(o.count)
-    
-    oi = Taskcounter(oif)
-    print oif + ': ' + str(oi.count)
-    
-    u = Taskcounter(uf)
-    print uf + ': ' + str(u.count)
-    
-    ui = Taskcounter(uif)
-    print uif + ': ' + str(ui.count)
-    
+    while True:
+        o = Taskcounter(of)
+        oi = Taskcounter(oif)
+        u = Taskcounter(uf)
+        ui = Taskcounter(uif)
 
+        a = LcdBackpack('/dev/ttyACM0', 115200)
+        a.connect()
+        a.display_on()
+        a.clear()
+
+        a.write("O'due: " + str(o.count) + ' P1: ' + str(oi.count))
+        a.set_cursor_position(1,2)
+        a.write("Soon: " + str(u.count) + ' P1: ' + str(ui.count))
+
+        if (oi.count > 0):
+            a.set_backlight_rgb(255, 0, 0)
+        elif (ui.count > 0):
+            a.set_backlight_rgb(255, 30, 0)
+        elif (o.count > 0):
+            a.set_backlight_rgb(20, 20, 255)
+        else:
+            a.set_backlight_rgb(0, 255, 0)
+
+        if debug == True:
+           print of + ': ' + str(o.count)
+           print oif + ': ' + str(oi.count)
+           print uf + ': ' + str(u.count)
+           print uif + ': ' + str(ui.count)
+
+        time.sleep(10)
+
+# At the moment, the only way to exit is to press CRTL+C, so there is no neat way to turn the LCD off.
+# TODO: find out how to make this into a backgroundable daemon that can be controlled with a systemd unit.
