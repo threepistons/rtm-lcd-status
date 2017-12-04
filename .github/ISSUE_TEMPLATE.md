@@ -1,6 +1,6 @@
 _Issue template: Please fill in the gaps.  Please note: I cannot help with filter design._
 
-**Given** [Your operating system and version] with Python [Your Python version] and all dependancies installed.
+**Given** [Your operating system and version] with Python [Your Python version] and all dependencies installed.
 
 **When I** [describe what actions you took, e.g. "When I ran ```./rtmstatus.py``` and pressed CTRL-C to exit"]
 
