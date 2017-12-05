@@ -25,14 +25,14 @@ class Taskcounter:
         
 def quitter(signal, frame):
     print('Quitting...')
-    a.display_off()
-    a.clear()
-    a.disconnect()
+    display.display_off()
+    display.clear()
+    display.disconnect()
     sys.exit(0)
 
 if __name__ == '__main__':
     
-    a = LcdBackpack('/dev/ttyACM0', 115200)
+    display = LcdBackpack('/dev/ttyACM0', 115200)
     signal.signal(signal.SIGINT, quitter)
     
     # put the api token and secret in the credentials file (chmod 600)
@@ -73,8 +73,8 @@ if __name__ == '__main__':
     uf = incompletef + ' and dueWithin:"2 days of now"'
     uif = uf + ' and ' + importantf
     
-    a.connect()
-    a.display_on()
+    display.connect()
+    display.display_on()
     
     print('Press Ctrl+C to quit')
     
@@ -84,20 +84,22 @@ if __name__ == '__main__':
         u = Taskcounter(uf)
         ui = Taskcounter(uif)
         
-        a.clear()
+        display.clear()
 
-        a.write("O'due: " + str(o.count) + ' P1: ' + str(oi.count))
-        a.set_cursor_position(1,2)
-        a.write("Soon: " + str(u.count) + ' P1: ' + str(ui.count))
+        display.write("O'due: " + str(o.count) + ' Imp: ' + str(oi.count))
+        display.set_cursor_position(1,2)
+        display.write("Soon: " + str(u.count) + ' Imp: ' + str(ui.count))
 
         if (oi.count > 0):
-            a.set_backlight_rgb(255, 0, 0)
+            display.set_backlight_rgb(255, 0, 0)
         elif (ui.count > 0):
-            a.set_backlight_rgb(255, 30, 0)
+            display.set_backlight_rgb(255, 30, 0)
         elif (o.count > 0):
-            a.set_backlight_rgb(20, 20, 255)
+            display.set_backlight_rgb(255, 255, 0)
+        elif (u.count > 0):
+            display.set_backlight_rgb(0, 0, 255)
         else:
-            a.set_backlight_rgb(0, 255, 0)
+            display.set_backlight_rgb(0, 255, 0)
 
         if debug == True:
            print of + ': ' + str(o.count)
