@@ -75,8 +75,7 @@ if __name__ == '__main__':
     
     a.connect()
     a.display_on()
-    a.clear()
-
+    
     print('Press Ctrl+C to quit')
     
     while True:
@@ -84,6 +83,8 @@ if __name__ == '__main__':
         oi = Taskcounter(oif)
         u = Taskcounter(uf)
         ui = Taskcounter(uif)
+        
+        a.clear()
 
         a.write("O'due: " + str(o.count) + ' P1: ' + str(oi.count))
         a.set_cursor_position(1,2)
