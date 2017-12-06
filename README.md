@@ -29,7 +29,6 @@ You need:
 
 - ```./rtmstatus.py``` runs the script.  Press CTRL-C to exit.
 - ```./rtmstatus.py debug``` runs the script with stuff sent to stdout.  Useful if you don't have a LCD backpack (yet) and want to check your filters.
-- ```./rtmstatus.py off``` turns the LCD backpack off.
 
 ## Future work
 
