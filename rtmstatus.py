@@ -4,7 +4,7 @@ import sys
 import signal
 import webbrowser
 from rtmapi import Rtm
-from rtmcreds import Rtmcreds
+from rtmstatusconf import Rtmsettings
 import time
 from lcdbackpack import LcdBackpack
 
@@ -23,6 +23,9 @@ class Taskcounter:
                 count += 1
         self.count = count
         
+def setbacklight(status):
+    display.set_backlight_rgb(settings.colours[status][0],settings.colours[status][1],settings.colours[status][2])
+        
 def quitter(signal, frame):
     print('Quitting...')
     display.display_off()
@@ -39,11 +42,10 @@ if __name__ == '__main__':
     # get those parameters from http://www.rememberthemilk.com/services/api/keys.rtm
 
     debug = True if (len(sys.argv) > 1 and sys.argv[1] == 'debug') else False
+    colourtest = True if (len(sys.argv) > 1 and sys.argv[1] == 'colourtest') else False
 
-    off = True if (len(sys.argv) > 1 and sys.argv[1] == 'off') else False
-
-    creds = Rtmcreds()
-    api = Rtm(creds.api_key, creds.shared_secret, "read", creds.token)
+    settings = Rtmsettings()
+    api = Rtm(settings.main['api_key'], settings.main['shared_secret'], 'read', settings.main['token'])
 
     # authentication block, see http://www.rememberthemilk.com/services/api/authentication.rtm
     # check for valid token
@@ -59,55 +61,39 @@ if __name__ == '__main__':
         # Put the new token in the credentials file by hand for now.
         print "New token: %s" % api.token
 
-    # Variable naming:
-    # * o = overdue
-    # * u  = urgent (needs to be done soon, not the same as important)
-    # * i  = important
-    # * f  = filter
-
-    incompletef = 'status:incomplete'
-    importantf = 'priority:1'
-
-    of = incompletef + ' and dueBefore:now'
-    oif = of + ' and ' + importantf
-    uf = incompletef + ' and dueWithin:"2 days of now"'
-    uif = uf + ' and ' + importantf
-    
     display.connect()
     display.display_on()
     
     print('Press Ctrl+C to quit')
     
     while True:
-        o = Taskcounter(of)
-        oi = Taskcounter(oif)
-        u = Taskcounter(uf)
-        ui = Taskcounter(uif)
+        o = Taskcounter(settings.filters['overdue'])
+        oi = Taskcounter(settings.filters['overdue_important'])
+        s = Taskcounter(settings.filters['soon'])
+        si = Taskcounter(settings.filters['soon_important'])
         
         display.clear()
 
         display.write("O'due: " + str(o.count) + ' Imp: ' + str(oi.count))
         display.set_cursor_position(1,2)
-        display.write("Soon: " + str(u.count) + ' Imp: ' + str(ui.count))
+        display.write("Soon: " + str(s.count) + ' Imp: ' + str(si.count))
 
         if (oi.count > 0):
-            display.set_backlight_rgb(255, 0, 0)
-        elif (ui.count > 0):
-            display.set_backlight_rgb(255, 30, 0)
+            setbacklight('overdue_important')
+        elif (si.count > 0):
+            setbacklight('soon_important')
         elif (o.count > 0):
-            display.set_backlight_rgb(255, 255, 0)
-        elif (u.count > 0):
-            display.set_backlight_rgb(0, 0, 255)
+            setbacklight('overdue')
+        elif (s.count > 0):
+            setbacklight('soon')
         else:
-            display.set_backlight_rgb(0, 255, 0)
+            setbacklight('no_tasks')
 
         if debug == True:
-           print of + ': ' + str(o.count)
-           print oif + ': ' + str(oi.count)
-           print uf + ': ' + str(u.count)
-           print uif + ': ' + str(ui.count)
+           print settings.filters['overdue'] + ': ' + str(o.count)
+           print settings.filters['overdue_important'] + ': ' + str(oi.count)
+           print settings.filters['soon'] + ': ' + str(s.count)
+           print settings.filters['soon_important'] + ': ' + str(si.count)
 
-        time.sleep(300)
+        time.sleep(settings.main['polling_delay'])
 
-# At the moment, the only way to exit is to press CRTL+C, so there is no neat way to turn the LCD off.
-# TODO: find out how to make this into a backgroundable daemon that can be controlled with a systemd unit.
