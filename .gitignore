@@ -1,3 +1,4 @@
 *.pyc
 rtmstatusconf.py
 *.conf
+*.yaml
