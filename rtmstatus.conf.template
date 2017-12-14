@@ -1,0 +1,43 @@
+[main]
+api_key = 
+shared_secret = 
+token = 
+polling_delay = 10
+# Colour to use if no searches return a value
+defaultcolour = 0,255,0
+
+[search0]
+# overdue important
+filter = status:incomplete and dueBefore:now and priority:1
+colour = 255,0,0
+x = 10
+y = 1
+label = Imp
+threshold = 0
+
+[search1]
+# soon important
+filter = status:incomplete and dueWithin:"2 days of now" and priority:1
+colour = 255,30,0
+x = 10
+y = 2
+label = Imp
+threshold = 0
+
+[search2]
+# overdue unimportant
+filter = status:incomplete and dueBefore:now and (not priority:1)
+colour = 255,150,0
+x = 1
+y = 1
+label = O'due
+threshold = 0
+
+[search3]
+# soon unimportant
+filter = status:incomplete and dueWithin:"2 days of now" and (not priority:1)
+colour = 30,30,255
+x = 1
+y = 2
+label = Soon
+threshold = 0

@@ -1,9 +1,0 @@
-class Rtmsettings:
-
-    # get those parameters from http://www.rememberthemilk.com/services/api/keys.rtm
-    # TODO: have these in a .conf file or similar
-        
-    def __init__(self):
-        self.main = {'api_key': 'your API key', 'shared_secret': 'your shared secret', 'token': 'make this None and run the script for the first time.  A web browser will open.  Login to RTM and a token will be printed by the script.  Put that token here.', 'polling_delay': 300}
-        self.filters = {'overdue': 'status:incomplete and dueBefore:now', 'overdue_important': 'status:incomplete and dueBefore:now and priority:1', 'soon': 'status:incomplete and dueWithin:"2 days of now"', 'soon_important': 'status:incomplete and dueWithin:"2 days of now" and priority:1'}
-        self.colours = {'overdue': (255,150,0), 'overdue_important': (255,0,0), 'soon': (0,0,255), 'soon_important': (255,30,0), 'no_tasks': (0,255,0)}
