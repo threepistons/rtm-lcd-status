@@ -4,25 +4,22 @@ import sys
 import signal
 import webbrowser
 from rtmapi import Rtm
-from rtmcreds import Rtmcreds
+import ConfigParser
 import time
 from lcdbackpack import LcdBackpack
 
-class Taskcounter:
-    # This class gets an integer number of tasks out of RTM, according to the supplied filter.
-    # e.g.
-    #    moo = Taskcounter('status:incomplete')
-    #    print str(moo.count) # gives number of open tasks
+def taskcounter (myfilter):
+    count = 0
+    result = api.rtm.tasks.getList(filter=myfilter)
+    for tasklist in result.tasks:
+        for taskseries in tasklist:
+            count += 1
+    return(count)
 
-    def __init__(self, myfilter):
-        self.myfilter = myfilter
-        count = 0
-        result = api.rtm.tasks.getList(filter=self.myfilter)
-        for tasklist in result.tasks:
-            for taskseries in tasklist:
-                count += 1
-        self.count = count
-        
+def setbacklight(colour):
+    rgb = colour.split(',')
+    display.set_backlight_rgb(int(rgb[0]),int(rgb[1]),int(rgb[2]))
+
 def quitter(signal, frame):
     print('Quitting...')
     display.display_off()
@@ -31,22 +28,23 @@ def quitter(signal, frame):
     sys.exit(0)
 
 if __name__ == '__main__':
-    
+
     display = LcdBackpack('/dev/ttyACM0', 115200)
     signal.signal(signal.SIGINT, quitter)
-    
+
     # put the api token and secret in the credentials file (chmod 600)
     # get those parameters from http://www.rememberthemilk.com/services/api/keys.rtm
 
     debug = True if (len(sys.argv) > 1 and sys.argv[1] == 'debug') else False
+    colourtest = True if (len(sys.argv) > 1 and sys.argv[1] == 'colourtest') else False
 
-    off = True if (len(sys.argv) > 1 and sys.argv[1] == 'off') else False
-
-    creds = Rtmcreds()
-    api = Rtm(creds.api_key, creds.shared_secret, "read", creds.token)
+    config = ConfigParser.SafeConfigParser()
+    config.readfp(open('rtmstatus.conf'))
+    api = Rtm(config.get('main', 'api_key'), config.get('main', 'shared_secret'), 'read', config.get('main', 'token'))
 
     # authentication block, see http://www.rememberthemilk.com/services/api/authentication.rtm
     # check for valid token
+
     if not api.token_valid():
         # use desktop-type authentication
         url, frob = api.authenticate_desktop()
@@ -59,55 +57,34 @@ if __name__ == '__main__':
         # Put the new token in the credentials file by hand for now.
         print "New token: %s" % api.token
 
-    # Variable naming:
-    # * o = overdue
-    # * u  = urgent (needs to be done soon, not the same as important)
-    # * i  = important
-    # * f  = filter
-
-    incompletef = 'status:incomplete'
-    importantf = 'priority:1'
-
-    of = incompletef + ' and dueBefore:now'
-    oif = of + ' and ' + importantf
-    uf = incompletef + ' and dueWithin:"2 days of now"'
-    uif = uf + ' and ' + importantf
-    
     display.connect()
     display.display_on()
-    
+
     print('Press Ctrl+C to quit')
-    
+
     while True:
-        o = Taskcounter(of)
-        oi = Taskcounter(oif)
-        u = Taskcounter(uf)
-        ui = Taskcounter(uif)
-        
+        backlight = config.get('main', 'defaultcolour')
+        count = {}
+        sections = config.sections()
+        sections.sort(reverse=True)
+
+        for section in sections:
+
+            if section != 'main':
+
+                count[section] = taskcounter(config.get(section, 'filter'))
+
         display.clear()
 
-        display.write("O'due: " + str(o.count) + ' Imp: ' + str(oi.count))
-        display.set_cursor_position(1,2)
-        display.write("Soon: " + str(u.count) + ' Imp: ' + str(ui.count))
+        for section in sections:
 
-        if (oi.count > 0):
-            display.set_backlight_rgb(255, 0, 0)
-        elif (ui.count > 0):
-            display.set_backlight_rgb(255, 30, 0)
-        elif (o.count > 0):
-            display.set_backlight_rgb(255, 255, 0)
-        elif (u.count > 0):
-            display.set_backlight_rgb(0, 0, 255)
-        else:
-            display.set_backlight_rgb(0, 255, 0)
+            if section != 'main':
 
-        if debug == True:
-           print of + ': ' + str(o.count)
-           print oif + ': ' + str(oi.count)
-           print uf + ': ' + str(u.count)
-           print uif + ': ' + str(ui.count)
+                display.set_cursor_position(int(config.get(section,'x')),int(config.get(section,'y')))
+                display.write(config.get(section,'label') + ': ' + str(count[section]))
 
-        time.sleep(300)
+                if (int(count[section]) > int(config.get(section,'threshold'))):
+                    backlight = config.get(section, 'colour')
 
-# At the moment, the only way to exit is to press CRTL+C, so there is no neat way to turn the LCD off.
-# TODO: find out how to make this into a backgroundable daemon that can be controlled with a systemd unit.
+        setbacklight(backlight)
+        time.sleep(float(config.get('main','polling_delay')))

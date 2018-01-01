@@ -1,3 +1,9 @@
 *.pyc
+<<<<<<< HEAD
+rtmstatusconf.py
+*.conf
+*.yaml
+=======
 rtmcreds.py
 *.conf
+>>>>>>> master
