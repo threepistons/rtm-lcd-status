@@ -15,11 +15,11 @@ def taskcounter (myfilter):
         for taskseries in tasklist:
             count += 1
     return(count)
-        
+
 def setbacklight(colour):
     rgb = colour.split(',')
     display.set_backlight_rgb(int(rgb[0]),int(rgb[1]),int(rgb[2]))
-        
+
 def quitter(signal, frame):
     print('Quitting...')
     display.display_off()
@@ -28,10 +28,10 @@ def quitter(signal, frame):
     sys.exit(0)
 
 if __name__ == '__main__':
-    
+
     display = LcdBackpack('/dev/ttyACM0', 115200)
     signal.signal(signal.SIGINT, quitter)
-    
+
     # put the api token and secret in the credentials file (chmod 600)
     # get those parameters from http://www.rememberthemilk.com/services/api/keys.rtm
 
@@ -44,6 +44,7 @@ if __name__ == '__main__':
 
     # authentication block, see http://www.rememberthemilk.com/services/api/authentication.rtm
     # check for valid token
+
     if not api.token_valid():
         # use desktop-type authentication
         url, frob = api.authenticate_desktop()
@@ -58,25 +59,32 @@ if __name__ == '__main__':
 
     display.connect()
     display.display_on()
-    
+
     print('Press Ctrl+C to quit')
-    
+
     while True:
+        backlight = config.get('main', 'defaultcolour')
         count = {}
         sections = config.sections()
         sections.sort(reverse=True)
+
         for section in sections:
+
             if section != 'main':
+
                 count[section] = taskcounter(config.get(section, 'filter'))
+
         display.clear()
-        setbacklight(config.get('main', 'defaultcolour'))
+
         for section in sections:
-            if section != 'main':        
+
+            if section != 'main':
+
                 display.set_cursor_position(int(config.get(section,'x')),int(config.get(section,'y')))
                 display.write(config.get(section,'label') + ': ' + str(count[section]))
+
                 if (int(count[section]) > int(config.get(section,'threshold'))):
-                    setbacklight(config.get(section, 'colour'))
- 
+                    backlight = config.get(section, 'colour')
 
+        setbacklight(backlight)
         time.sleep(float(config.get('main','polling_delay')))
-
