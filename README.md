@@ -11,6 +11,7 @@
 You need:
 - Python 2.7ish
 - PIP
+- Python config parser library, type ```pip install configparser```
 - The RtmAPI from https://bitbucket.org/rtmapi/rtmapi/overview or type ```pip install rtmapi```
 - The LCD backpack library from https://github.com/dinofizz/adafruit-usb-serial-lcd-backpack or type ```pip install lcdbackpack```
 - A RTM API key and shared secret, from https://www.rememberthemilk.com/services/api/
@@ -19,9 +20,9 @@ You need:
 
 1. Install the dependancies and get an API key.
 2. Clone this repo.
-3. Copy **rtmcreds.py.template** to **rtmcreds.py** and put the API key and secret in indicated.
-4. Chmod the rtmstatus.py to 700 and rtmcreds.py to 600.
-4. Run the script without arguments (see Invocation section), sign in to RTM in the web browser that opens, and put the token in rtmcreds.py.
+3. Copy **rtmstatus.conf.template** to **rtmstatus.conf** and put the API key and secret in indicated.
+4. Chmod the rtmstatus.py to 700 and rtmstatus.conf to 600.
+4. Run the script without arguments (see Invocation section), sign in to RTM in the web browser that opens, and put the token in rtmstatus.conf.
 5. Customise the filter strings as desired.
 6. Connect the LCD backpack to your computer's USB port.
 
