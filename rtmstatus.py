@@ -39,8 +39,21 @@ if __name__ == '__main__':
     colourtest = True if (len(sys.argv) > 1 and sys.argv[1] == 'colourtest') else False
 
     config = ConfigParser.SafeConfigParser()
+    # test for file presence
+    # if not there, exit telling user to rename template to file and get api key
+    ## TODO: implement previous comment
     config.readfp(open('rtmstatus.conf'))
-    api = Rtm(config.get('main', 'api_key'), config.get('main', 'shared_secret'), 'read', config.get('main', 'token'))
+    # test for config items existing
+    if (not config.has_option('main', 'api_key') or not config.has_option('main', 'shared_secret')):
+        # without api_key or shared_secret, I cannot do anything, so exit and tell user to get an API key
+        print "You need to get a RTM API key and shared secret to use this script."
+        # exiting with an error code because the script cannot run
+        sys.exit(1)
+    # if token isn't there then launch API without it so we can get one and store it, else launch anyway.
+    if config.has_option('main','token'):
+        api = Rtm(config.get('main', 'api_key'), config.get('main', 'shared_secret'), 'read', config.get('main', 'token'))
+    else:
+        api = Rtm(config.get('main', 'api_key'), config.get('main', 'shared_secret'), 'read', None)
 
     # authentication block, see http://www.rememberthemilk.com/services/api/authentication.rtm
     # check for valid token
@@ -53,9 +66,13 @@ if __name__ == '__main__':
         raw_input("Continue?")
         # get the token for the frob
         api.retrieve_token(frob)
-        # print out new token, should be used to initialize the Rtm object next time
-        # Put the new token in the credentials file by hand for now.
-        print "New token: %s" % api.token
+        # If the token turns out to be invalid, we get a valid one and store it.
+        config.set('main','token',api.token)
+        with open('rtmstatus.conf', 'w') as configfile:
+            config.write(configfile) # TODO test that this worked
+        # reinitialize the Rtm object
+        del api
+        api = Rtm(config.get('main', 'api_key'), config.get('main', 'shared_secret'), 'read', config.get('main', 'token'))
 
     display.connect()
     display.display_on()
