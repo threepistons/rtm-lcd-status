@@ -98,7 +98,10 @@ if __name__ == '__main__':
             if section != 'main':
 
                 display.set_cursor_position(int(config.get(section,'x')),int(config.get(section,'y')))
-                display.write(config.get(section,'label') + ': ' + str(count[section]))
+                if int(count[section]) < 10:
+                    display.write(config.get(section,'label') + ': ' + str(count[section]))
+                else:
+                    display.write(config.get(section,'label') + ':' + str(count[section]))
 
                 if (int(count[section]) > int(config.get(section,'threshold'))):
                     backlight = config.get(section, 'colour')
