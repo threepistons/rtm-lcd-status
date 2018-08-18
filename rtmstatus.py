@@ -7,18 +7,17 @@ from rtmapi import Rtm
 import ConfigParser
 import time
 from lcdbackpack import LcdBackpack
+import daemon
 
-def taskcounter (myfilter):
+display = LcdBackpack('/dev/ttyACM0', 115200)
+
+def taskcounter (myfilter, api):
     count = 0
     result = api.rtm.tasks.getList(filter=myfilter)
     for tasklist in result.tasks:
         for taskseries in tasklist:
             count += 1
     return(count)
-
-def setbacklight(colour):
-    rgb = colour.split(',')
-    display.set_backlight_rgb(int(rgb[0]),int(rgb[1]),int(rgb[2]))
 
 def quitter(signal, frame):
     print('Quitting...')
@@ -27,9 +26,7 @@ def quitter(signal, frame):
     display.disconnect()
     sys.exit(0)
 
-if __name__ == '__main__':
-
-    display = LcdBackpack('/dev/ttyACM0', 115200)
+def workhorse():
     signal.signal(signal.SIGINT, quitter)
 
     # put the api token and secret in the credentials file (chmod 600)
@@ -89,7 +86,7 @@ if __name__ == '__main__':
 
             if section != 'main':
 
-                count[section] = taskcounter(config.get(section, 'filter'))
+                count[section] = taskcounter(config.get(section, 'filter'), api)
 
         display.clear()
 
@@ -106,5 +103,9 @@ if __name__ == '__main__':
                 if (int(count[section]) > int(config.get(section,'threshold'))):
                     backlight = config.get(section, 'colour')
 
-        setbacklight(backlight)
+        rgb = backlight.split(',')
+        display.set_backlight_rgb(int(rgb[0]),int(rgb[1]),int(rgb[2]))
         time.sleep(float(config.get('main','polling_delay')))
+
+if __name__ == '__main__':
+    workhorse()
