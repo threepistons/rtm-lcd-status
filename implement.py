@@ -1,41 +1,34 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 
 import sys
-import signal
 import webbrowser
 from rtmapi import Rtm
 import ConfigParser
 import time
 from lcdbackpack import LcdBackpack
-from py_daemon import py_daemon
+from daemon import Daemon
 
-class RTMTicker(py_daemon.Daemon):
+def screenoff(display):
+    display.display_off()
+    display.clear()
+    display.disconnect()
+    
+def taskcounter (self, myfilter, api):
+    count = 0
+    result = api.rtm.tasks.getList(filter=myfilter)
+    for tasklist in result.tasks:
+        for taskseries in tasklist:
+            count += 1
+    return(count)
 
-    display = LcdBackpack('/dev/ttyACM0', 115200)
-
-    def taskcounter (self, myfilter, api):
-        count = 0
-        result = api.rtm.tasks.getList(filter=myfilter)
-        for tasklist in result.tasks:
-            for taskseries in tasklist:
-                count += 1
-        return(count)
-
-    def quitter(self, signal, frame):
-        print('Quitting...')
-        self.display.display_off()
-        self.display.clear()
-        self.display.disconnect()
-        sys.exit(0)
+class MyDaemon(Daemon):
 
     def run(self):
-        signal.signal(signal.SIGINT, self.quitter)
 
         # put the api token and secret in the credentials file (chmod 600)
         # get those parameters from http://www.rememberthemilk.com/services/api/keys.rtm
 
-        debug = True if (len(sys.argv) > 1 and sys.argv[1] == 'debug') else False
-        colourtest = True if (len(sys.argv) > 1 and sys.argv[1] == 'colourtest') else False
+        debug = False
 
         config = ConfigParser.SafeConfigParser()
         # test for file presence
@@ -73,11 +66,6 @@ class RTMTicker(py_daemon.Daemon):
             del api
             api = Rtm(config.get('main', 'api_key'), config.get('main', 'shared_secret'), 'read', config.get('main', 'token'))
 
-        self.display.connect()
-        self.display.display_on()
-
-        print('Press Ctrl+C to quit')
-
         while True:
             backlight = config.get('main', 'defaultcolour')
             count = {}
@@ -88,27 +76,47 @@ class RTMTicker(py_daemon.Daemon):
 
                 if section != 'main':
 
-                    count[section] = self.taskcounter(config.get(section, 'filter'), api)
+                    count[section] = taskcounter(config.get(section, 'filter'), api)
 
-            self.display.clear()
+            display.clear()
 
             for section in sections:
 
                 if section != 'main':
 
-                    self.display.set_cursor_position(int(config.get(section,'x')),int(config.get(section,'y')))
+                    display.set_cursor_position(int(config.get(section,'x')),int(config.get(section,'y')))
                     if int(count[section]) < 10:
-                        self.display.write(config.get(section,'label') + ': ' + str(count[section]))
+                        display.write(config.get(section,'label') + ': ' + str(count[section]))
                     else:
-                        self.display.write(config.get(section,'label') + ':' + str(count[section]))
+                        display.write(config.get(section,'label') + ':' + str(count[section]))
 
                     if (int(count[section]) > int(config.get(section,'threshold'))):
                         backlight = config.get(section, 'colour')
 
             rgb = backlight.split(',')
-            self.display.set_backlight_rgb(int(rgb[0]),int(rgb[1]),int(rgb[2]))
+            display.set_backlight_rgb(int(rgb[0]),int(rgb[1]),int(rgb[2]))
             time.sleep(float(config.get('main','polling_delay')))
 
-if __name__ == '__main__':
-    ticker = RTMTicker('~/rtm.pid')
-    ticker.run()
+
+if __name__ == "__main__":
+    
+    display = LcdBackpack('/dev/ttyACM0', 115200)
+    
+    daemon = MyDaemon('/tmp/daemon-example.pid')
+    if len(sys.argv) == 2:
+        if 'start' == sys.argv[1]:
+            display.connect()
+            display.display_on()
+            daemon.start()
+        elif 'stop' == sys.argv[1]:
+            screenoff(display)
+            daemon.stop()
+        elif 'restart' == sys.argv[1]:
+            daemon.restart()
+        else:
+            print "Unknown command"
+            sys.exit(2)
+        sys.exit(0)
+    else:
+        print "usage: %s start|stop|restart" % sys.argv[0]
+        sys.exit(2)
