@@ -31,7 +31,7 @@ class MyDaemon(Daemon):
         debug = False
 
         config = ConfigParser.SafeConfigParser()
-        # test for file presence
+        # test for comfig file presence
         # if not there, exit telling user to rename template to file and get api key
         ## TODO: implement previous comment
         config.readfp(open('rtmstatus.conf'))
