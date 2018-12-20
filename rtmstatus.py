@@ -31,6 +31,9 @@ if __name__ == '__main__':
 
     display = LcdBackpack('/dev/ttyACM0', 115200)
     signal.signal(signal.SIGINT, quitter)
+    signal.signal(signal.SIGTERM, quitter)
+    signal.signal(signal.SIGKILL, quitter)
+    signal.signal(signal.SIGHUP, quitter)
 
     # put the api token and secret in the credentials file (chmod 600)
     # get those parameters from http://www.rememberthemilk.com/services/api/keys.rtm
