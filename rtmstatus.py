@@ -1,10 +1,10 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 
 import sys
 import signal
 import webbrowser
 from rtmapi import Rtm
-import ConfigParser
+import configparser
 import time
 from lcdbackpack import LcdBackpack
 import daemon
@@ -35,15 +35,15 @@ def workhorse():
     debug = True if (len(sys.argv) > 1 and sys.argv[1] == 'debug') else False
     colourtest = True if (len(sys.argv) > 1 and sys.argv[1] == 'colourtest') else False
 
-    config = ConfigParser.SafeConfigParser()
+    config = configparser.ConfigParser()
     # test for file presence
     # if not there, exit telling user to rename template to file and get api key
     ## TODO: implement previous comment
-    config.readfp(open('rtmstatus.conf'))
+    config.read_file(open('rtmstatus.conf'))
     # test for config items existing
     if (not config.has_option('main', 'api_key') or not config.has_option('main', 'shared_secret')):
         # without api_key or shared_secret, I cannot do anything, so exit and tell user to get an API key
-        print "You need to get a RTM API key and shared secret to use this script."
+        print ('You need to get a RTM API key and shared secret to use this script.')
         # exiting with an error code because the script cannot run
         sys.exit(1)
     # if token isn't there then launch API without it so we can get one and store it, else launch anyway.
@@ -60,7 +60,7 @@ def workhorse():
         url, frob = api.authenticate_desktop()
         # open webbrowser, wait until user authorized application
         webbrowser.open(url)
-        raw_input("Continue?")
+        input("Continue?")
         # get the token for the frob
         api.retrieve_token(frob)
         # If the token turns out to be invalid, we get a valid one and store it.
