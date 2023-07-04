@@ -105,6 +105,11 @@ def workhorse():
 
         rgb = backlight.split(',')
         display.set_backlight_rgb(int(rgb[0]),int(rgb[1]),int(rgb[2]))
+        
+        if debug == True:
+
+          print(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()))
+
         time.sleep(float(config.get('main','polling_delay')))
 
 if __name__ == '__main__':
