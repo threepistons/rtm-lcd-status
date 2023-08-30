@@ -77,40 +77,53 @@ def workhorse():
     print('Press Ctrl+C to quit')
 
     while True:
-        backlight = config.get('main', 'defaultcolour')
-        count = {}
-        sections = config.sections()
-        sections.sort(reverse=True)
+        try:
+            backlight = config.get('main', 'defaultcolour')
+            count = {}
+            sections = config.sections()
+            sections.sort(reverse=True)
 
-        for section in sections:
+            for section in sections:
 
-            if section != 'main':
+                if section != 'main':
 
-                count[section] = taskcounter(config.get(section, 'filter'), api)
+                    count[section] = taskcounter(config.get(section, 'filter'), api)
 
-        display.clear()
+            display.clear()
 
-        for section in sections:
+            for section in sections:
 
-            if section != 'main':
+                if section != 'main':
 
-                display.set_cursor_position(int(config.get(section,'x')),int(config.get(section,'y')))
-                if int(count[section]) < 10:
-                    display.write(config.get(section,'label') + ': ' + str(count[section]))
-                else:
-                    display.write(config.get(section,'label') + ':' + str(count[section]))
+                    display.set_cursor_position(int(config.get(section,'x')),int(config.get(section,'y')))
+                    if int(count[section]) < 10:
+                        display.write(config.get(section,'label') + ': ' + str(count[section]))
+                    else:
+                        display.write(config.get(section,'label') + ':' + str(count[section]))
 
-                if (int(count[section]) > int(config.get(section,'threshold'))):
-                    backlight = config.get(section, 'colour')
+                    if (int(count[section]) > int(config.get(section,'threshold'))):
+                        backlight = config.get(section, 'colour')
 
-        rgb = backlight.split(',')
-        display.set_backlight_rgb(int(rgb[0]),int(rgb[1]),int(rgb[2]))
-        
-        if debug == True:
+            rgb = backlight.split(',')
+            display.set_backlight_rgb(int(rgb[0]),int(rgb[1]),int(rgb[2]))
+            
+            if debug == True:
+                print(time.strftime("%Y-%m-%d %H:%M:%S:", time.localtime()), 'Task counts written to display')
 
-          print(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()))
+        except:
+            if debug == True:
+                print(time.strftime("%Y-%m-%d %H:%M:%S:", time.localtime()), 'RTM website unreachable')
+            display.clear()
+            display.set_cursor_position(1,1)
+            display.write('RTM website')
+            display.set_cursor_position(1,2)
+            display.write('unreachable')
+            backlight = config.get('main', 'errorcolour')
+            rgb = backlight.split(',')
+            display.set_backlight_rgb(int(rgb[0]),int(rgb[1]),int(rgb[2]))
 
-        time.sleep(float(config.get('main','polling_delay')))
+        finally:
+            time.sleep(float(config.get('main','polling_delay')))
 
 if __name__ == '__main__':
     workhorse()

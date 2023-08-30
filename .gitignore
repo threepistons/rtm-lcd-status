@@ -1,3 +1,8 @@
 *.pyc
 *.conf
 *.kate-swp
+bin
+include
+lib
+lib64
+pyvenv.cfg
