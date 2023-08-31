@@ -1,10 +1,10 @@
 [main]
 api_key = 
 shared_secret = 
-token = 
 polling_delay = 600
 defaultcolour = 0,0,0
 errorcolour = 0,0,255
+token = 
 
 [search0]
 filter = status:incomplete and dueBefore:today and priority:1
